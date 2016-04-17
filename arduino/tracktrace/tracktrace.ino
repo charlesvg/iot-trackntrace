@@ -231,15 +231,15 @@ int8_t gpsStatus;
   getValue(gpsdata,myBuff,',',4); // lon
   postData.concat(myBuff);
 
-  postData.concat("&altitude=");
+  postData.concat("&alt=");
   getValue(gpsdata,myBuff,',',5); // altitude
   postData.concat(myBuff);
 
-  postData.concat("&speed=");
+  postData.concat("&spd=");
   getValue(gpsdata,myBuff,',',6); // speed
   postData.concat(myBuff);
 
-  postData.concat("&course=");
+  postData.concat("&crs=");
   getValue(gpsdata,myBuff,',',7); // course
   postData.concat(myBuff);
 
