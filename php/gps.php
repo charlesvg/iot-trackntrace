@@ -38,6 +38,7 @@ if( true )
   $query = "INSERT INTO GPS_LOG (utc,lat,lon,alt,spd,crs) values ('$utc','$lat','$lon','$alt','$spd','$crs')";
   
   mysql_query($query);
+  mysqli_commit($con);
   mysql_close($con);
   
   
