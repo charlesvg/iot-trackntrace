@@ -2,7 +2,8 @@
 
 //file_put_contents("post.log",print_r($_POST,true));
 
-if( $_POST )
+//if( $_POST )
+if( true )
 {
   $con = mysql_connect("localhost","adminiXYsIE9","IWvPxqGN-eBQ");
 
