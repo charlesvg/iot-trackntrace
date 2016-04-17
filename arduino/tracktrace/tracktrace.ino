@@ -53,6 +53,29 @@ uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout = 0);
 
 uint8_t type;
 
+void getValue(const char * source, char * dest, char separator, int index)
+{
+  int found = 0;
+  int maxIndex = strlen(source);
+   
+  int strIndex[2] = {0,-1};
+  for(int i=0; i<=maxIndex && found<=index; i++)
+  {    
+    if(source[i]==separator || i==maxIndex)
+    {
+      found++;
+      
+      strIndex[0] = strIndex[1]+1;
+      strIndex[1] = (i == maxIndex) ? i+1 : i;
+    }
+ }
+
+ strncpy(dest,source+strIndex[0], strIndex[1]-strIndex[0]);
+ dest[strIndex[1]-strIndex[0]] = '\0';
+  
+}
+
+
 void setup() {
   while (!Serial);
   
@@ -139,27 +162,103 @@ void setup() {
     gprsEnabled = fona.enableGPRS(true);
     if (!gprsEnabled)
     {
-      Serial.println(F("Failed to turn GRPS on"));
+      Serial.println(F("Failed to turn GPRS on"));
     } else {
-      Serial.println(F("GRPS turned on!"));
+      Serial.println(F("GPRS turned on!"));
     }
   } while (!gprsEnabled);
   
+  boolean gpsEnabled = false;
+  do {
+    delay(1000);
+    // turn GPS on
+    gpsEnabled = fona.enableGPS(true);
+    if (!gpsEnabled)
+    {
+      Serial.println(F("Failed to turn GPS on"));
+    } else {
+      Serial.println(F("GPS turned on!"));
+    }
+  } while (!gpsEnabled);
 
-  //delay(5000);
+int8_t gpsStatus;
+
+ 
+  do {
+    delay(3000);
+    // check GPS fix
+    gpsStatus = fona.GPSstatus();
+    if (gpsStatus < 0)
+      Serial.println(F("Failed to query GPS status!"));
+    if (gpsStatus == 0) Serial.println(F("GPS off"));
+    if (gpsStatus == 1) Serial.println(F("No fix"));
+    if (gpsStatus == 2) Serial.println(F("2D fix"));
+    if (gpsStatus == 3) Serial.println(F("3D fix"));
+  } while (gpsStatus != 3);
+
+
+  char gpsdata[120];
+  fona.getGPS(0, gpsdata, 120);
+  if (type == FONA808_V1)
+    Serial.println(F("Reply in format: mode,longitude,latitude,altitude,utctime(yyyymmddHHMMSS),ttff,satellites,speed,course"));
+  else 
+    Serial.println(F("Reply in format: mode,fixstatus,utctime(yyyymmddHHMMSS),latitude,longitude,altitude,speed,course,fixmode,reserved1,HDOP,PDOP,VDOP,reserved2,view_satellites,used_satellites,reserved3,C/N0max,HPA,VPA"));
+  Serial.println(gpsdata);
+
+  
+  String postData = "";
+  char myBuff[120];
+
+  /*
+  postData.concat("mode=");
+  getValue(gpsdata,myBuff,',',0); // mode
+  postData.concat(myBuff);
+
+  postData.concat("&fix=");
+  getValue(gpsdata,myBuff,',',1); // fixstatus
+  postData.concat(myBuff);
+  */
+
+  postData.concat("utc=");
+  getValue(gpsdata,myBuff,',',2); // utc time
+  postData.concat(myBuff);
+
+  postData.concat("&lat=");
+  getValue(gpsdata,myBuff,',',3); // lat
+  postData.concat(myBuff);
+
+  postData.concat("&lon=");
+  getValue(gpsdata,myBuff,',',4); // lon
+  postData.concat(myBuff);
+
+  postData.concat("&altitude=");
+  getValue(gpsdata,myBuff,',',5); // altitude
+  postData.concat(myBuff);
+
+  postData.concat("&speed=");
+  getValue(gpsdata,myBuff,',',6); // speed
+  postData.concat(myBuff);
+
+  postData.concat("&course=");
+  getValue(gpsdata,myBuff,',',7); // course
+  postData.concat(myBuff);
+
+  postData.concat('\0');
+
 
   // Post data to website
   uint16_t statuscode;
   int16_t length;
   char url[80] = "http://php-car0.rhcloud.com/gps.php";
-  char data[80] = "test=helloworldfromarduino";
+  char data[postData.length()];
+  postData.toCharArray(data,postData.length());
 
   flushSerial();
   Serial.println(F("**** POSTING DATA ****"));
   Serial.println(url);
   Serial.println(data);
-
   Serial.println(F("****"));
+  
   if (!fona.HTTP_POST_start(url, F("application/x-www-form-urlencoded"), (uint8_t *) data, strlen(data), &statuscode, (uint16_t *)&length)) {
     Serial.println("Failed to POST data!");
   } else {
