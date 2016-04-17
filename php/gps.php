@@ -5,14 +5,13 @@
 //if( $_POST )
 if( true )
 {
-  $con = mysql_connect("localhost","adminiXYsIE9","IWvPxqGN-eBQ");
 
-  if (!$con)
-  {
-    die('Could not connect: ' . mysql_error());
-  }
-
-  mysql_select_db("php", $con);
+	$link = mysqli_connect("localhost", "adminiXYsIE9", "IWvPxqGN-eBQ", "php");
+	/* check connection */
+	if (mysqli_connect_errno()) {
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		exit();
+	}
 
 	/*
   $utc = mysql_real_escape_string($_POST['utc']);
@@ -36,10 +35,10 @@ if( true )
   
 
   $query = "INSERT INTO GPS_LOG (utc,lat,lon,alt,spd,crs) values ('$utc','$lat','$lon','$alt','$spd','$crs')";
-  
-  mysql_query($query);
-  mysqli_commit($con);
-  mysql_close($con);
+  echo $query;
+  mysqli_query($link,$query);
+  mysqli_commit($link);
+  mysqli_close($link);
   
   
   
